@@ -16,6 +16,7 @@ func Getapp() *cli.App {
 func config(app *cli.App) {
 	app.Name = "nick"
 	app.Usage = "nick is enhance npm."
+	app.Version = "1.0.0"
 }
 
 func getCommands() []cli.Command {
