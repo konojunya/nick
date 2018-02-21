@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/konojunya/nick/model"
@@ -12,40 +14,74 @@ import (
 	"github.com/urfave/cli"
 )
 
-func Save(c *cli.Context) error {
+// Save save .nick.json file from package.json
+func Save(c *cli.Context) {
 	raw, err := ioutil.ReadFile("./package.json")
 	if err != nil {
-		return err
+		fmt.Println(err)
+		return
 	}
 
 	js := strings.NewReader(string(raw))
 
-	var modules map[string]interface{}
+	var dependencies map[string]interface{}
+	var devDependencies map[string]interface{}
 
-	err = scan.ScanJSON(js, "/dependencies", &modules)
-	if err != nil {
-		fmt.Println(err)
-		return err
+	scan.ScanJSON(js, "/dependencies", &dependencies)
+	scan.ScanJSON(js, "/devDependencies", &devDependencies)
+
+	var dependenciesKeys []string
+	var devDependenciesKeys []string
+	for key := range dependencies {
+		dependenciesKeys = append(dependenciesKeys, key)
+	}
+	for key := range devDependencies {
+		devDependenciesKeys = append(devDependenciesKeys, key)
 	}
 
-	var keys []string
-
-	for key := range modules {
-		keys = append(keys, key)
-	}
 	output, err := json.Marshal(&model.Json{
-		Dependencies: keys,
+		Dependencies:    dependenciesKeys,
+		DevDependencies: devDependenciesKeys,
 	})
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 
 	context := []byte(output)
 	ioutil.WriteFile(".nick.json", context, os.ModePerm)
-
-	return nil
 }
 
-func Install(c *cli.Context) error {
-	return nil
+// Load load
+func Load(c *cli.Context) {
+	raw, err := ioutil.ReadFile(".nick.json")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	var js model.Json
+	err = json.Unmarshal(raw, &js)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	loadModules(js)
+}
+
+func loadModules(js model.Json) {
+	if len(js.Dependencies) != 0 {
+		b, err := exec.Command("npm", "install", "--save", strings.Join(js.Dependencies, " ")).CombinedOutput()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(string(b))
+	}
+
+	if len(js.DevDependencies) != 0 {
+		b, err := exec.Command("npm", "install", "--save-dev", strings.Join(js.DevDependencies, " ")).CombinedOutput()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(string(b))
+	}
 }

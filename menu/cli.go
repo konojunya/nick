@@ -26,9 +26,9 @@ func getCommands() []cli.Command {
 			Action: action.Save,
 		},
 		{
-			Name:   "install",
-			Usage:  "npm install",
-			Action: action.Install,
+			Name:   "load",
+			Usage:  "load",
+			Action: action.Load,
 		},
 	}
 }

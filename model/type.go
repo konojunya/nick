@@ -1,5 +1,6 @@
 package model
 
 type Json struct {
-	Dependencies []string `json:"dependencies"`
+	Dependencies    []string `json:"dependencies"`
+	DevDependencies []string `json:"devDependencies"`
 }
