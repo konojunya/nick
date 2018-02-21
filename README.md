@@ -1,6 +1,8 @@
 # nick
 nick is enhance npm.
 
+![](https://raw.githubusercontent.com/konojunya/nick/master/public/nick.png)
+![](https://raw.githubusercontent.com/konojunya/nick/master/public/screen.gif)
 ## Install
 
 ```
