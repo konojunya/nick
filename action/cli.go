@@ -22,13 +22,11 @@ func Save(c *cli.Context) {
 		return
 	}
 
-	js := strings.NewReader(string(raw))
-
 	var dependencies map[string]interface{}
 	var devDependencies map[string]interface{}
 
-	scan.ScanJSON(js, "/dependencies", &dependencies)
-	scan.ScanJSON(js, "/devDependencies", &devDependencies)
+	scan.ScanJSON(strings.NewReader(string(raw)), "/devDependencies", &devDependencies)
+	scan.ScanJSON(strings.NewReader(string(raw)), "/dependencies", &dependencies)
 
 	var dependenciesKeys []string
 	var devDependenciesKeys []string
@@ -46,6 +44,8 @@ func Save(c *cli.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Printf("Save modules: %v", string(output))
 
 	context := []byte(output)
 	ioutil.WriteFile(".nick.json", context, os.ModePerm)
@@ -70,18 +70,14 @@ func Load(c *cli.Context) {
 
 func loadModules(js model.Json) {
 	if len(js.Dependencies) != 0 {
-		b, err := exec.Command("npm", "install", "--save", strings.Join(js.Dependencies, " ")).CombinedOutput()
-		if err != nil {
-			log.Fatal(err)
-		}
+		cmdstr := "npm install --save" + strings.Join(js.Dependencies, " ")
+		b, _ := exec.Command("sh", "-c", cmdstr).CombinedOutput()
 		fmt.Println(string(b))
 	}
 
 	if len(js.DevDependencies) != 0 {
-		b, err := exec.Command("npm", "install", "--save-dev", strings.Join(js.DevDependencies, " ")).CombinedOutput()
-		if err != nil {
-			log.Fatal(err)
-		}
+		cmdstr := "npm install --save" + strings.Join(js.DevDependencies, " ")
+		b, _ := exec.Command("sh", "-c", cmdstr).CombinedOutput()
 		fmt.Println(string(b))
 	}
 }
